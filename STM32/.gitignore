@@ -1,0 +1,20 @@
+# 编译输出
+Debug/
+Release/
+*.o
+*.d
+*.elf
+*.bin
+*.hex
+*.map
+*.lst
+
+# IDE 临时文件
+*.log
+*.launch
+
+# CubeIDE 自动生成的一些本地配置（可选）
+.settings/language.settings.xml
+
+# 备份文件
+*~
