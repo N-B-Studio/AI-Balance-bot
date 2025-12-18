@@ -1,6 +1,8 @@
 # AI-Balance-bot
 FOC balance bot based on odrive-mini, STM32 and Linux PC
 
+![cover](https://github.com/user-attachments/assets/ca9a1dbb-3895-411c-bd08-cdf5c83a3056)
+
 ## Project Overview
 This project implements a self-balancing robot with AI capabilities, combining embedded STM32H7 firmware with Linux-based control scripts and face detection capabilities.
 
