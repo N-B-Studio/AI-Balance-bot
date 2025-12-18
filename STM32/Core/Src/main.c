@@ -51,20 +51,20 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-// --- speed loop config ---
-	float v_target = 0.0f;          // 目标线速度(可以先=0，后面接遥控/手动)
-	float Kv_p     = 0.1f;          // 速度P增益 (自己慢慢调)
-	float Kv_i     = 0.01f;          // 速度I增益 (先小一点)
+// --- Speed control loop configuration ---
+    float v_target = 0.0f;          // Target linear velocity (can be 0 initially; later from RC/manual)
+    float Kv_p     = 0.1f;          // Velocity P gain (tune gradually)
+    float Kv_i     = 0.01f;         // Velocity I gain (start small)
 
-	float v_integral      = 0.0f;
-	float v_integral_limit = 5.0f;  // 防积分饱和
+    float v_integral      = 0.0f;
+    float v_integral_limit = 5.0f;  // Prevent integral windup
 
-	float base_pitch       = -1.5f;   // keep your calibrated base
-	float pitch_speed_limit = 6.0f;   // allow ±6° tilt from joystick
-	float torque_limit      = 1.5f;   // give motors more torque headroom
+    float base_pitch       = -1.5f; // Calibrated base pitch (degrees)
+    float pitch_speed_limit = 6.0f; // Maximum pitch offset from joystick (degrees)
+    float torque_limit      = 1.5f; // Max motor torque headroom
 
 
-	// 速度环频率：1kHz / 10 = 100 Hz
+    // Velocity loop frequency: 1kHz / 10 = 100 Hz
 	#define VEL_LOOP_DIV 10
 	uint8_t vel_loop_counter = 0;
 
@@ -73,28 +73,28 @@
 	volatile float odrive_left_pos  = 0.0f;
 	volatile float odrive_right_pos = 0.0f;
 
-	// ===== YAW 控制 =====
-	float yaw               = 0.0f;      // 当前 yaw 角（积分出来的大概值）
-	float Ky_p              = 0.0f;    // yaw 角度 P
-	float Ky_d              = 0.02f;    // yaw 角速度 D
-	float yaw_torque_limit  = 0.4f;      // yaw 能占用的最大力矩
+    // ===== YAW control =====
+    float yaw               = 0.0f;      // Current yaw angle (approx. from integration)
+    float Ky_p              = 0.0f;      // Yaw angle P gain
+    float Ky_d              = 0.02f;     // Yaw rate D gain
+    float yaw_torque_limit  = 0.4f;      // Maximum torque allocated to yaw
 
-	// 轮子 / 机器人几何参数（按你实际修改）
-	#define WHEEL_RADIUS_M   0.06f   // 5cm 半径举例
-	#define GEAR_RATIO       1.0f    // 直驱就填 1，减速箱就填减速比
+    // Wheel / robot geometry parameters (adjust to your robot)
+    #define WHEEL_RADIUS_M   0.06f   // 0.06 m (example: 6 cm radius)
+    #define GEAR_RATIO       1.0f    // Use 1.0 for direct drive, or set gearbox reduction ratio
 
-	// 位置环
-	float x_target      = 0.0f;     // 希望机器人停在 x=0
-	float Kx_p          = 0.0f;     // 位置 P 增益（先 0.5~2 之间试）
-	float Kx_i          = 0.0f;     // 位置 I（先关掉，调好再开）
-	float x_integral    = 0.0f;
-	float x_int_limit   = 0.5f;     // 积分限幅（米）
+    // Position loop
+    float x_target      = 0.0f;     // Desired robot position (x=0)
+    float Kx_p          = 0.0f;     // Position P gain (try 0.5~2 to start)
+    float Kx_i          = 0.0f;     // Position I (start disabled; enable after tuning)
+    float x_integral    = 0.0f;
+    float x_int_limit   = 0.5f;     // Integral limit (meters)
 
-	// 记录上电时的初始平均位置
-	float x0_turns = 0.0f;          // 以“轮子转数”为原点
-	uint8_t pos_initialized = 0;    // 是否初始化过
+    // Record initial average position at power-up
+    float x0_turns = 0.0f;          // Origin in wheel turns
+    uint8_t pos_initialized = 0;    // Position initialization flag
 
-	// 全局：
+    // Global variables:
 	volatile float odrive_left_pos_turns  = 0.0f;
 	volatile float odrive_right_pos_turns = 0.0f;
 	volatile float odrive_left_vel_turns  = 0.0f;
@@ -236,10 +236,10 @@ void odrive_set_input_torque(FDCAN_HandleTypeDef *hcan, uint8_t node_id, float t
 }
 
 
-typedef struct {
-    float pos_turns;   // 位置，turns
-    float vel_turns_s; // 速度，turns/s
-} OdriveState;
+    typedef struct {
+        float pos_turns;   // Position in wheel turns
+        float vel_turns_s; // Velocity in turns per second
+    } OdriveState;
 
 OdriveState odrive_get_state(FDCAN_HandleTypeDef *hcan, uint8_t node_id)
 {
@@ -248,13 +248,13 @@ OdriveState odrive_get_state(FDCAN_HandleTypeDef *hcan, uint8_t node_id)
     uint16_t req_id = odrive_build_id(node_id, CMD_GET_ENCODER_ESTIMATES);
 
     uint8_t tx_data[8] = {0};
-    fdcanx_send_data(hcan, req_id, tx_data, 0);  // 请求
+    fdcanx_send_data(hcan, req_id, tx_data, 0);  // Request
 
     uint32_t start = HAL_GetTick();
     uint16_t rec_id;
     uint8_t rx_buf[8];
 
-    while ((HAL_GetTick() - start) < 2)   // 最多等 2ms
+    while ((HAL_GetTick() - start) < 2)   // Wait at most 2 ms
     {
         uint8_t len = fdcanx_receive(hcan, &rec_id, rx_buf);
         if (len > 0 && rec_id == req_id)
@@ -276,7 +276,7 @@ OdriveState odrive_get_state(FDCAN_HandleTypeDef *hcan, uint8_t node_id)
         }
     }
 
-    return st; // 没收到就全 0
+    return st; // Return zeros if no response received
 }
 
 // === RC UART frame parser: 0xAA 0x55 fb_int lr_int checksum ===
@@ -443,7 +443,7 @@ int main(void)
 	       // assuming gy is pitch rate
 	       pitch = alpha * (pitch + gy * dt) + (1.0f - alpha) * pitch_acc;
 	       roll  = alpha * (roll  + gx * dt) + (1.0f - alpha) * roll_acc;
-	       yaw += gz * dt;   // yaw 单位：deg，大概朝向，慢慢会漂
+        yaw += gz * dt;   // Yaw in degrees; approximate heading (will drift over time)
 
 	       // ==================== vel + pos loop ===========================
 	       vel_loop_counter++;
@@ -451,7 +451,7 @@ int main(void)
 	       {
 	           vel_loop_counter = 0;
 
-	           // 1) 读取 ODrive 状态（保留，将来用位置/速度）
+               // 1) Read ODrive state (kept for future position/velocity usage)
 	           OdriveState st_left  = odrive_get_state(&hfdcan1, ODRIVE_LEFT_NODE_ID);
 	           OdriveState st_right = odrive_get_state(&hfdcan2, ODRIVE_RIGHT_NODE_ID);
 
@@ -466,49 +466,49 @@ int main(void)
 	               pos_initialized = 1;
 	           }
 
-	           // === RC 前后：直接映射到俯仰角偏移 ===
-	           float pitch_offset = rc_fb * pitch_speed_limit;   // rc_fb ∈ [-1, 1]
+               // === RC forward/back: map directly to pitch offset ===
+               float pitch_offset = rc_fb * pitch_speed_limit;   // rc_fb in [-1, 1]
 
 	           pitch_target = base_pitch - pitch_offset;
 	       }
 
 
 
-	       // =================== 姿态（pitch）PID =======================
-	       float error = pitch_target - pitch;     // target = 0 deg
+        // =================== Attitude (pitch) PID =======================
+        float error = pitch_target - pitch;     // target = 0 deg
 
 	       integral_term += error * dt;
 	       if (integral_term >  integral_limit) integral_term =  integral_limit;
 	       if (integral_term < -integral_limit) integral_term = -integral_limit;
 
-	       float derivative = -gy;   // gy>0 前倾时，derivative 为负来“刹车”
+        float derivative = -gy;   // gy>0 forward tilt; derivative negative to provide damping/braking
 
 	       float torque_cmd = Kp * error + Kd * derivative + Ki * integral_term;
 
-	       // 限幅
+        // Clamp torque command
 	       if (torque_cmd >  torque_limit) torque_cmd =  torque_limit;
 	       if (torque_cmd < -torque_limit) torque_cmd = -torque_limit;
 
 
-	       // =================== YAW PID（差分力矩） =======================
+        // =================== YAW PID (differential torque) =======================
 	       // rc_lr ∈ [-1, +1]  →   yaw_torque ∈ [-yaw_torque_limit, +yaw_torque_limit]
 
-	       float yaw_torque = rc_lr * 0.1 * yaw_torque_limit;  // 主控制：遥控器
+        float yaw_torque = rc_lr * 0.1 * yaw_torque_limit;  // Primary control: RC (remote controller)
 
-	       // 可选：用陀螺仪做一点阻尼，防止发散（类似 D）
-	       float yaw_damping = Ky_d * gz;   // gz > 0 转向时，产生反向力矩
+        // Optional: use gyro for damping to prevent divergence (acts like D term)
+        float yaw_damping = Ky_d * gz;   // gz > 0 when turning; produces counter torque
 	       yaw_torque -= yaw_damping;
 
-	       // 限幅
+        // Clamp yaw torque
 	       if (yaw_torque >  yaw_torque_limit) yaw_torque =  yaw_torque_limit;
 	       if (yaw_torque < -yaw_torque_limit) yaw_torque = -yaw_torque_limit;
 
-	       // =================== 合成左右轮力矩 =======================
-	       // pitch 用共模, yaw 用差模
+        // =================== Compose left/right wheel torques =======================
+        // Pitch contributes common-mode torque; yaw contributes differential torque
 	       float left_torque  = torque_cmd + yaw_torque;
 	       float right_torque = torque_cmd - yaw_torque;
 
-	       // （如果发现 yaw 方向反了，左右加减号对调即可）
+        // (If yaw direction is reversed, swap the signs on left/right torques)
 
 	       odrive_set_input_torque(&hfdcan1, ODRIVE_LEFT_NODE_ID,  -left_torque);
 	       odrive_set_input_torque(&hfdcan2, ODRIVE_RIGHT_NODE_ID, right_torque);

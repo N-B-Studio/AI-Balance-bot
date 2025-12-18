@@ -1,4 +1,4 @@
-# 编译输出
+# Build artifacts
 Debug/
 Release/
 *.o
@@ -9,12 +9,12 @@ Release/
 *.map
 *.lst
 
-# IDE 临时文件
+# IDE temporary files
 *.log
 *.launch
 
-# CubeIDE 自动生成的一些本地配置（可选）
+# CubeIDE generated local config (optional)
 .settings/language.settings.xml
 
-# 备份文件
+# Backup files
 *~

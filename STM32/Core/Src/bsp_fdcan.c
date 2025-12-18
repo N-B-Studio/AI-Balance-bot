@@ -1,17 +1,17 @@
 #include "bsp_fdcan.h"
 /**
 ************************************************************************
-* @brief:      	bsp_can_init(void)
+* @brief:       bsp_can_init(void)
 * @param:       void
-* @retval:     	void
-* @details:    	CAN ʹ��
+* @retval:      void
+* @details:     Initialize CAN peripherals and filters
 ************************************************************************
 **/
 void bsp_can_init(void)
 {
 	can_filter_init();
-	HAL_FDCAN_Start(&hfdcan1);                               //����FDCAN
-	HAL_FDCAN_Start(&hfdcan2);
+    HAL_FDCAN_Start(&hfdcan1);                               // Start FDCAN1
+    HAL_FDCAN_Start(&hfdcan2);                               // Start FDCAN2
 	//HAL_FDCAN_Start(&hfdcan3);
 	//HAL_FDCAN_ActivateNotification(&hfdcan1, FDCAN_IT_RX_FIFO0_NEW_MESSAGE, 0);
 	//HAL_FDCAN_ActivateNotification(&hfdcan2, FDCAN_IT_RX_FIFO0_NEW_MESSAGE, 0);
@@ -19,10 +19,10 @@ void bsp_can_init(void)
 }
 /**
 ************************************************************************
-* @brief:      	can_filter_init(void)
+* @brief:       can_filter_init(void)
 * @param:       void
-* @retval:     	void
-* @details:    	CAN�˲�����ʼ��
+* @retval:      void
+* @details:     Configure CAN acceptance filters and FIFO watermarks
 ************************************************************************
 **/
 void can_filter_init(void)
@@ -36,14 +36,14 @@ void can_filter_init(void)
     fdcan_filter.FilterID1 = 0x00;
     fdcan_filter.FilterID2 = 0x00;
 
-    // FDCAN1 过滤器
+    // FDCAN1 filter
     HAL_FDCAN_ConfigFilter(&hfdcan1, &fdcan_filter);
     HAL_FDCAN_ConfigGlobalFilter(&hfdcan1,
                                  FDCAN_REJECT, FDCAN_REJECT,
                                  FDCAN_REJECT_REMOTE, FDCAN_REJECT_REMOTE);
     HAL_FDCAN_ConfigFifoWatermark(&hfdcan1, FDCAN_CFG_RX_FIFO0, 1);
 
-    // === 新增：FDCAN2 同样的过滤器 ===
+    // === Added: same filter configuration for FDCAN2 ===
     HAL_FDCAN_ConfigFilter(&hfdcan2, &fdcan_filter);
     HAL_FDCAN_ConfigGlobalFilter(&hfdcan2,
                                  FDCAN_REJECT, FDCAN_REJECT,
@@ -52,13 +52,13 @@ void can_filter_init(void)
 }
 /**
 ************************************************************************
-* @brief:      	fdcanx_send_data(FDCAN_HandleTypeDef *hfdcan, uint16_t id, uint8_t *data, uint32_t len)
-* @param:       hfdcanFDCAN
-* @param:       id��CAN�豸ID
-* @param:       data
-* @param:       len
-* @retval:     	void
-* @details:    	��������
+* @brief:       fdcanx_send_data(FDCAN_HandleTypeDef *hfdcan, uint16_t id, uint8_t *data, uint32_t len)
+* @param:       hfdcan        FDCAN handle
+* @param:       id            CAN identifier
+* @param:       data          Pointer to transmit data
+* @param:       len           Length of data in bytes
+* @retval:      0 on success, non-zero on error
+* @details:     Build a CAN TX header and enqueue message to TX FIFO
 ************************************************************************
 **/
 uint8_t fdcanx_send_data(hcan_t *hfdcan, uint16_t id, uint8_t *data, uint32_t len)
@@ -68,14 +68,14 @@ uint8_t fdcanx_send_data(hcan_t *hfdcan, uint16_t id, uint8_t *data, uint32_t le
     pTxHeader.IdType       = FDCAN_STANDARD_ID;
     pTxHeader.TxFrameType  = FDCAN_DATA_FRAME;
 
-    // === 显式处理 len ===
+    // === Explicit handling of Data Length Code (DLC) based on len ===
     if (len == 0)
     {
         pTxHeader.DataLength = FDCAN_DLC_BYTES_0;
     }
     else if (len <= 8)
     {
-        // 有些工程里直接用 0..8 作为长度，这里保持你原来的风格
+        // Some projects use 0..8 directly as length; retain original style here
         pTxHeader.DataLength = len;
     }
     else if (len == 12)
@@ -94,17 +94,18 @@ uint8_t fdcanx_send_data(hcan_t *hfdcan, uint16_t id, uint8_t *data, uint32_t le
         pTxHeader.DataLength = FDCAN_DLC_BYTES_64;
     else
     {
-        // 非法长度，直接返回错误
+        // Invalid length: return error
         return 1;
-    }
-
-    pTxHeader.ErrorStateIndicator = FDCAN_ESI_ACTIVE;
-    pTxHeader.BitRateSwitch       = FDCAN_BRS_ON;
-    pTxHeader.FDFormat            = FDCAN_FD_CAN;
-    pTxHeader.TxEventFifoControl  = FDCAN_NO_TX_EVENTS;
-    pTxHeader.MessageMarker       = 0;
- 
-    if (HAL_FDCAN_AddMessageToTxFifoQ(hfdcan, &pTxHeader, data) != HAL_OK)
+    /**
+    ************************************************************************
+    * @brief:       fdcanx_receive(FDCAN_HandleTypeDef *hfdcan, uint8_t *buf)
+    * @param:       hfdcan        FDCAN handle
+    * @param:       rec_id        Pointer to receive identifier output
+    * @param:       buf           Buffer to store received data
+    * @retval:      Number of bytes received (0 if none)
+    * @details:     Read a message from FDCAN RX FIFO0 and convert DLC to byte length
+    ************************************************************************
+    **/
         return 1;
 
     return 0;
@@ -144,7 +145,7 @@ uint8_t fdcanx_receive(hcan_t *hfdcan, uint16_t *rec_id, uint8_t *buf)
 		if(pRxHeader.DataLength<=FDCAN_DLC_BYTES_64)
 			len = 64;
 		
-		return len;//��������
+        return len; // return received data length in bytes
 	}
 	return 0;	
 }

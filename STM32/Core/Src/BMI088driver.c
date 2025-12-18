@@ -1,21 +1,21 @@
 #include "BMI088driver.h"
 #include "BMI088reg.h"
 #include "BMI088Middleware.h"
-
-
-float BMI088_ACCEL_SEN = BMI088_ACCEL_3G_SEN;
-float BMI088_GYRO_SEN = BMI088_GYRO_2000_SEN;
-
-
-
-#if defined(BMI088_USE_SPI)
 /**
 ************************************************************************
-* @brief:      	BMI088_accel_write_single_reg(reg, data)
-* @param:       reg - ¼Ä´æÆ÷µØÖ·
-*               data - Ð´ÈëµÄÊý¾Ý
-* @retval:     	void
-* @details:    	Í¨¹ýBMI088¼ÓËÙ¶È¼ÆµÄSPI×ÜÏßÐ´Èëµ¥¸ö¼Ä´æÆ÷µÄºê¶¨Òå
+* @brief:       BMI088_read_multi_reg(uint8_t reg, uint8_t *buf, uint8_t len)
+* @param:       reg - start register address
+* @param:       buf - buffer to store read bytes
+* @param:       len - number of bytes to read
+* @retval:      void
+* @details:     Read multiple consecutive registers from BMI088 over SPI
+************************************************************************
+**/
+* @brief:       BMI088_accel_write_single_reg(reg, data)
+* @param:       reg  - register address to write
+* @param:       data - byte to write
+* @retval:      void
+* @details:     Drive SPI to write a single accelerometer register on BMI088
 ************************************************************************
 **/
 #define BMI088_accel_write_single_reg(reg, data) \
@@ -23,16 +23,16 @@ float BMI088_GYRO_SEN = BMI088_GYRO_2000_SEN;
         BMI088_ACCEL_NS_L();                     \
         BMI088_write_single_reg((reg), (data));  \
         BMI088_ACCEL_NS_H();                     \
-    }
-/**
-************************************************************************
-* @brief:      	BMI088_accel_read_single_reg(reg, data)
-* @param:       reg - ¼Ä´æÆ÷µØÖ·
-*               data - ¶ÁÈ¡µÄ¼Ä´æÆ÷Êý¾Ý
-* @retval:     	void
-* @details:    	Í¨¹ýBMI088¼ÓËÙ¶È¼ÆµÄSPI×ÜÏß¶ÁÈ¡µ¥¸ö¼Ä´æÆ÷µÄºê¶¨Òå
-************************************************************************
-**/
+    /**
+    ************************************************************************
+    * @brief:       BMI088_read_multi_reg(uint8_t reg, uint8_t *buf, uint8_t len)
+    * @param:       reg - start register address
+    * @param:       buf - buffer to store read bytes
+    * @param:       len - number of bytes to read
+    * @retval:      void
+    * @details:     Read multiple consecutive registers from BMI088 over SPI
+    ************************************************************************
+    **/
 #define BMI088_accel_read_single_reg(reg, data) \
     {                                           \
         BMI088_ACCEL_NS_L();                    \
@@ -43,12 +43,12 @@ float BMI088_GYRO_SEN = BMI088_GYRO_2000_SEN;
     }
 /**
 ************************************************************************
-* @brief:      	BMI088_accel_read_muli_reg(reg, data, len)
-* @param:       reg - ÆðÊ¼¼Ä´æÆ÷µØÖ·
-*               data - ´æ´¢¶ÁÈ¡Êý¾ÝµÄ»º³åÇø
-*               len - Òª¶ÁÈ¡µÄ×Ö½ÚÊý
-* @retval:     	void
-* @details:    	Í¨¹ýBMI088¼ÓËÙ¶È¼ÆµÄSPI×ÜÏßÁ¬Ðø¶ÁÈ¡¶à¸ö¼Ä´æÆ÷µÄºê¶¨Òå
+* @brief:       BMI088_accel_read_multi_reg(reg, data, len)
+* @param:       reg  - start register address
+* @param:       data - buffer to store read bytes
+* @param:       len  - number of bytes to read
+* @retval:      void
+* @details:     Drive SPI to read multiple accelerometer registers on BMI088
 ************************************************************************
 **/
 #define BMI088_accel_read_muli_reg(reg, data, len) \
@@ -60,11 +60,11 @@ float BMI088_GYRO_SEN = BMI088_GYRO_2000_SEN;
     }
 /**
 ************************************************************************
-* @brief:      	BMI088_gyro_write_single_reg(reg, data)
-* @param:       reg - ¼Ä´æÆ÷µØÖ·
-*               data - Ð´ÈëµÄÊý¾Ý
-* @retval:     	void
-* @details:    	Í¨¹ýBMI088ÍÓÂÝÒÇµÄSPI×ÜÏßÐ´Èëµ¥¸ö¼Ä´æÆ÷µÄºê¶¨Òå
+* @brief:       BMI088_gyro_write_single_reg(reg, data)
+* @param:       reg  - register address to write
+* @param:       data - byte to write
+* @retval:      void
+* @details:     Drive SPI to write a single gyroscope register on BMI088
 ************************************************************************
 **/
 #define BMI088_gyro_write_single_reg(reg, data) \
@@ -75,11 +75,11 @@ float BMI088_GYRO_SEN = BMI088_GYRO_2000_SEN;
     }
 /**
 ************************************************************************
-* @brief:      	BMI088_gyro_read_single_reg(reg, data)
-* @param:       reg - ¼Ä´æÆ÷µØÖ·
-*               data - ¶ÁÈ¡µÄ¼Ä´æÆ÷Êý¾Ý
-* @retval:     	void
-* @details:    	Í¨¹ýBMI088ÍÓÂÝÒÇµÄSPI×ÜÏß¶ÁÈ¡µ¥¸ö¼Ä´æÆ÷µÄºê¶¨Òå
+* @brief:       BMI088_gyro_read_single_reg(reg, data)
+* @param:       reg  - register address to read
+* @param:       data - output byte read from register
+* @retval:      void
+* @details:     Drive SPI to read a single gyroscope register on BMI088
 ************************************************************************
 **/
 #define BMI088_gyro_read_single_reg(reg, data)  \
@@ -90,12 +90,12 @@ float BMI088_GYRO_SEN = BMI088_GYRO_2000_SEN;
     }
 /**
 ************************************************************************
-* @brief:      	BMI088_gyro_read_muli_reg(reg, data, len)
-* @param:       reg - ÆðÊ¼¼Ä´æÆ÷µØÖ·
-*               data - ´æ´¢¶ÁÈ¡Êý¾ÝµÄ»º³åÇø
-*               len - Òª¶ÁÈ¡µÄ×Ö½ÚÊý
-* @retval:     	void
-* @details:    	Í¨¹ýBMI088ÍÓÂÝÒÇµÄSPI×ÜÏßÁ¬Ðø¶ÁÈ¡¶à¸ö¼Ä´æÆ÷µÄºê¶¨Òå
+* @brief:       BMI088_gyro_read_multi_reg(reg, data, len)
+* @param:       reg  - start register address
+* @param:       data - buffer to store read bytes
+* @param:       len  - number of bytes to read
+* @retval:      void
+* @details:     Drive SPI to read multiple gyroscope registers on BMI088
 ************************************************************************
 **/
 #define BMI088_gyro_read_muli_reg(reg, data, len)   \
@@ -116,10 +116,10 @@ static void BMI088_read_muli_reg(uint8_t reg, uint8_t *buf, uint8_t len);
 #endif
 /**
 ************************************************************************
-* @brief:      	write_BMI088_accel_reg_data_error_init(void)
+* @brief:       write_BMI088_accel_reg_data_error_init(void)
 * @param:       void
-* @retval:     	void
-* @details:    	BMI088¼ÓËÙ¶È´«¸ÐÆ÷¼Ä´æÆ÷Êý¾ÝÐ´Èë´íÎó´¦Àí³õÊ¼»¯
+* @retval:      void
+* @details:     Table of accelerometer register initial values and error codes
 ************************************************************************
 **/
 static uint8_t write_BMI088_accel_reg_data_error[BMI088_WRITE_ACCEL_REG_NUM][3] =
@@ -134,10 +134,10 @@ static uint8_t write_BMI088_accel_reg_data_error[BMI088_WRITE_ACCEL_REG_NUM][3] 
 };
 /**
 ************************************************************************
-* @brief:      	write_BMI088_gyro_reg_data_error_init(void)
+* @brief:       write_BMI088_gyro_reg_data_error_init(void)
 * @param:       void
-* @retval:     	void
-* @details:    	BMI088ÍÓÂÝÒÇ´«¸ÐÆ÷¼Ä´æÆ÷Êý¾ÝÐ´Èë´íÎó´¦Àí³õÊ¼»¯
+* @retval:      void
+* @details:     Table of gyroscope register initial values and error codes
 ************************************************************************
 **/
 static uint8_t write_BMI088_gyro_reg_data_error[BMI088_WRITE_GYRO_REG_NUM][3] =
@@ -152,10 +152,10 @@ static uint8_t write_BMI088_gyro_reg_data_error[BMI088_WRITE_GYRO_REG_NUM][3] =
 };
 /**
 ************************************************************************
-* @brief:      	BMI088_init(void)
+* @brief:       BMI088_init(void)
 * @param:       void
-* @retval:     	uint8_t - ´íÎó´úÂë
-* @details:    	BMI088´«¸ÐÆ÷³õÊ¼»¯º¯Êý£¬°üÀ¨GPIOºÍSPI³õÊ¼»¯£¬ÒÔ¼°¼ÓËÙ¶ÈºÍÍÓÂÝÒÇµÄ³õÊ¼»¯
+* @retval:      uint8_t - error status (BMI088_NO_ERROR on success)
+* @details:     Initialize GPIO/SPI and initialize both accelerometer and gyro
 ************************************************************************
 **/
 uint8_t BMI088_init(void)
@@ -172,10 +172,10 @@ uint8_t BMI088_init(void)
 }
 /**
 ************************************************************************
-* @brief:      	bmi088_accel_init(void)
+* @brief:       bmi088_accel_init(void)
 * @param:       void
-* @retval:     	uint8_t - ´íÎó´úÂë
-* @details:    	BMI088¼ÓËÙ¶È´«¸ÐÆ÷³õÊ¼»¯º¯Êý£¬°üÀ¨Í¨ÐÅ¼ì²é¡¢Èí¼þ¸´Î»¡¢ÅäÖÃ¼Ä´æÆ÷Ð´Èë¼°¼ì²é
+* @retval:      uint8_t - error status
+* @details:     Initialize BMI088 accelerometer: configure registers and verify
 ************************************************************************
 **/
 uint8_t bmi088_accel_init(void)
@@ -224,10 +224,10 @@ uint8_t bmi088_accel_init(void)
 }
 /**
 ************************************************************************
-* @brief:      	bmi088_gyro_init(void)
+* @brief:       bmi088_gyro_init(void)
 * @param:       void
-* @retval:     	uint8_t - ´íÎó´úÂë
-* @details:    	BMI088ÍÓÂÝÒÇ´«¸ÐÆ÷³õÊ¼»¯º¯Êý£¬°üÀ¨Í¨ÐÅ¼ì²é¡¢Èí¼þ¸´Î»¡¢ÅäÖÃ¼Ä´æÆ÷Ð´Èë¼°¼ì²é
+* @retval:      uint8_t - error status
+* @details:     Initialize BMI088 gyroscope: configure registers and verify
 ************************************************************************
 **/
 uint8_t bmi088_gyro_init(void)
@@ -277,11 +277,11 @@ uint8_t bmi088_gyro_init(void)
 /**
 ************************************************************************
 * @brief:      	BMI088_read(float gyro[3], float accel[3], float *temperate)
-* @param:       gyro - ÍÓÂÝÒÇÊý¾ÝÊý×é (x, y, z)
-* @param:       accel - ¼ÓËÙ¶È¼ÆÊý¾ÝÊý×é (x, y, z)
-* @param:       temperate - ÎÂ¶ÈÊý¾ÝÖ¸Õë
+* @param:       gyro - ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ (x, y, z)
+* @param:       accel - ï¿½ï¿½ï¿½Ù¶È¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ (x, y, z)
+* @param:       temperate - ï¿½Â¶ï¿½ï¿½ï¿½ï¿½ï¿½Ö¸ï¿½ï¿½
 * @retval:     	void
-* @details:    	¶ÁÈ¡BMI088´«¸ÐÆ÷Êý¾Ý£¬°üÀ¨¼ÓËÙ¶È¡¢ÍÓÂÝÒÇºÍÎÂ¶È
+* @details:    	ï¿½ï¿½È¡BMI088ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ý£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ù¶È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Çºï¿½ï¿½Â¶ï¿½
 ************************************************************************
 **/
 void BMI088_read(float gyro[3], float accel[3], float *temperate)
@@ -324,10 +324,10 @@ void BMI088_read(float gyro[3], float accel[3], float *temperate)
 /**
 ************************************************************************
 * @brief:      	BMI088_write_single_reg(uint8_t reg, uint8_t data)
-* @param:       reg - ¼Ä´æÆ÷µØÖ·
-* @param:       data - Ð´ÈëµÄÊý¾Ý
+* @param:       reg - ï¿½Ä´ï¿½ï¿½ï¿½ï¿½ï¿½Ö·
+* @param:       data - Ð´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 * @retval:     	void
-* @details:    	ÏòBMI088´«¸ÐÆ÷Ð´Èëµ¥¸ö¼Ä´æÆ÷µÄÊý¾Ý
+* @details:    	ï¿½ï¿½BMI088ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð´ï¿½ëµ¥ï¿½ï¿½ï¿½Ä´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 ************************************************************************
 **/
 static void BMI088_write_single_reg(uint8_t reg, uint8_t data)
@@ -337,24 +337,24 @@ static void BMI088_write_single_reg(uint8_t reg, uint8_t data)
 }
 /**
 ************************************************************************
-* @brief:      	BMI088_read_single_reg(uint8_t reg, uint8_t *return_data)
-* @param:       reg - ¼Ä´æÆ÷µØÖ·
-* @param:       return_data - ¶ÁÈ¡µÄ¼Ä´æÆ÷Êý¾Ý
-* @retval:     	void
-* @details:    	´ÓBMI088´«¸ÐÆ÷¶ÁÈ¡µ¥¸ö¼Ä´æÆ÷µÄÊý¾Ý
+* @brief:       BMI088_read_single_reg(uint8_t reg, uint8_t *return_data)
+* @param:       reg         - register address to read
+* @param:       return_data - pointer to store the returned byte
+* @retval:      void
+* @details:     Read a single register from BMI088 over SPI
 ************************************************************************
 **/
 static void BMI088_read_single_reg(uint8_t reg, uint8_t *return_data)
-{
-    BMI088_read_write_byte(reg | 0x80);
-    *return_data = BMI088_read_write_byte(0x55);
-}
-
-//static void BMI088_write_muli_reg(uint8_t reg, uint8_t* buf, uint8_t len )
-//{
-//    BMI088_read_write_byte( reg );
-//    while( len != 0 )
-//    {
+/**
+************************************************************************
+* @brief:       BMI088_read_multi_reg(uint8_t reg, uint8_t *buf, uint8_t len)
+* @param:       reg - start register address
+* @param:       buf - buffer to store read bytes
+* @param:       len - number of bytes to read
+* @retval:      void
+* @details:     Read multiple consecutive registers from BMI088 over SPI
+************************************************************************
+**/
 
 //        BMI088_read_write_byte( *buf );
 //        buf ++;
@@ -365,11 +365,11 @@ static void BMI088_read_single_reg(uint8_t reg, uint8_t *return_data)
 /**
 ************************************************************************
 * @brief:      	BMI088_read_muli_reg(uint8_t reg, uint8_t *buf, uint8_t len)
-* @param:       reg - ÆðÊ¼¼Ä´æÆ÷µØÖ·
-*               buf - ´æ´¢¶ÁÈ¡Êý¾ÝµÄ»º³åÇø
-*               len - Òª¶ÁÈ¡µÄ×Ö½ÚÊý
+* @param:       reg - ï¿½ï¿½Ê¼ï¿½Ä´ï¿½ï¿½ï¿½ï¿½ï¿½Ö·
+*               buf - ï¿½æ´¢ï¿½ï¿½È¡ï¿½ï¿½ï¿½ÝµÄ»ï¿½ï¿½ï¿½ï¿½ï¿½
+*               len - Òªï¿½ï¿½È¡ï¿½ï¿½ï¿½Ö½ï¿½ï¿½ï¿½
 * @retval:     	void
-* @details:    	´ÓBMI088´«¸ÐÆ÷Á¬Ðø¶ÁÈ¡¶à¸ö¼Ä´æÆ÷µÄÊý¾Ý
+* @details:    	ï¿½ï¿½BMI088ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½Ä´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 ************************************************************************
 **/
 static void BMI088_read_muli_reg(uint8_t reg, uint8_t *buf, uint8_t len)
