@@ -1,6 +1,6 @@
 # FOC-STM32-Balance-bot
 FOC balance bot based on odrive-mini, STM32 and Linux PC
-### Build video: https://youtu.be/rl2r_75Lwew
+### Build video: https://youtu.be/XxXtfrMc1Zo
 ![cover](https://github.com/user-attachments/assets/ca9a1dbb-3895-411c-bd08-cdf5c83a3056)
 
 ## Project Overview
